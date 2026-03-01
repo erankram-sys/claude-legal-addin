@@ -4,7 +4,7 @@
            xsi:type="TaskPaneApp">
   <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
   <Version>1.0.0</Version>
-  <ProviderName>Ehud Porat & Partners</ProviderName>
+  <ProviderName>Ehud Porat and Partners</ProviderName>
   <DefaultLocale>he-IL</DefaultLocale>
   <DisplayName DefaultValue="Claude Legal Assistant"/>
   <Description DefaultValue="עוזר משפטי מבוסס AI לעורכי דין"/>
@@ -12,8 +12,7 @@
     <Host Name="Document"/>
   </Hosts>
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src
-/taskpane.html"/>
+    <SourceLocation DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src/taskpane.html"/>
   </DefaultSettings>
   <Permissions>ReadWriteDocument</Permissions>
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides">
@@ -59,18 +58,13 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src
-/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src
-/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src
-/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src/taskpane.html"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src/taskpane.html"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src/taskpane.html"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Commands.Url" DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src
-/commands.html"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src
-/taskpane.html"/>
+        <bt:Url id="Commands.Url" DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src/commands.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://erankram-sys.github.io/claude-legal-addin/src/taskpane.html"/>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://anthropic.com"/>
       </bt:Urls>
       <bt:ShortStrings>
