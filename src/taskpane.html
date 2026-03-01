@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Claude Legal Assistant</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f8f9fa;
+      color: #1a1a2e;
+      direction: rtl;
+      font-size: 13px;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 3px solid #c9a84c;
+    }
+    .header-logo {
+      width: 32px; height: 32px;
+      background: #c9a84c;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 16px; color: #1a1a2e;
+      flex-shrink: 0;
+    }
+    .header-title { font-size: 14px; font-weight: 700; }
+    .header-subtitle { font-size: 10px; color: #c9a84c; }
+
+    /* API Key section */
+    #api-section {
+      padding: 12px;
+      background: #fff3cd;
+      border-bottom: 1px solid #ffc107;
+    }
+    #api-section label { font-size: 11px; font-weight: 600; color: #856404; display: block; margin-bottom: 4px; }
+    #api-key-input {
+      width: 100%; padding: 6px 8px;
+      border: 1px solid #ffc107; border-radius: 6px;
+      font-size: 11px; direction: ltr;
+    }
+    #save-key-btn {
+      margin-top: 6px; padding: 4px 12px;
+      background: #856404; color: white;
+      border: none; border-radius: 6px;
+      font-size: 11px; cursor: pointer;
+    }
+    #api-status { font-size: 10px; color: #198754; margin-top: 4px; display: none; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: white;
+      border-bottom: 2px solid #e9ecef;
+      overflow-x: auto;
+    }
+    .tab {
+      padding: 8px 10px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      color: #6c757d;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tab.active { color: #1a1a2e; border-bottom-color: #c9a84c; }
+    .tab:hover { background: #f8f9fa; }
+
+    /* Panels */
+    .panel { display: none; padding: 12px; }
+    .panel.active { display: block; }
+
+    /* Section labels */
+    .section-label {
+      font-size: 10px; font-weight: 700;
+      color: #6c757d; text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 6px;
+    }
+
+    /* Quick Action Buttons */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .action-btn {
+      padding: 8px 6px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #1a1a2e;
+      transition: all 0.15s;
+      line-height: 1.3;
+    }
+    .action-btn:hover { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+    .action-btn .icon { font-size: 16px; display: block; margin-bottom: 2px; }
+    .action-btn.gold { border-color: #c9a84c; }
+    .action-btn.gold:hover { background: #c9a84c; border-color: #c9a84c; color: #1a1a2e; }
+
+    /* Textarea */
+    textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 12px;
+      resize: vertical;
+      font-family: inherit;
+      direction: rtl;
+      background: white;
+    }
+    textarea:focus { outline: none; border-color: #c9a84c; }
+
+    /* Select */
+    select {
+      width: 100%;
+      padding: 7px 8px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 12px;
+      background: white;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    /* Primary button */
+    .btn-primary {
+      width: 100%;
+      padding: 9px;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 8px;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary.gold-btn {
+      background: linear-gradient(135deg, #c9a84c, #a07830);
+      color: #1a1a2e;
+    }
+
+    /* Result box */
+    .result-box {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.6;
+      min-height: 80px;
+      margin-top: 8px;
+      display: none;
+      white-space: pre-wrap;
+      direction: rtl;
+    }
+    .result-box.visible { display: block; }
+    .result-actions {
+      display: flex; gap: 6px; margin-top: 6px;
+      display: none;
+    }
+    .result-actions.visible { display: flex; }
+    .btn-insert {
+      flex: 1; padding: 7px;
+      background: #198754; color: white;
+      border: none; border-radius: 8px;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-insert:hover { background: #146c43; }
+    .btn-copy {
+      padding: 7px 12px;
+      background: #6c757d; color: white;
+      border: none; border-radius: 8px;
+      font-size: 12px; cursor: pointer;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center; padding: 20px;
+      color: #6c757d; display: none;
+    }
+    .spinner {
+      width: 30px; height: 30px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #c9a84c;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Chat panel */
+    .chat-messages {
+      height: 280px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .msg {
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      max-width: 90%;
+    }
+    .msg.user {
+      background: #1a1a2e; color: white;
+      align-self: flex-start;
+      border-bottom-right-radius: 3px;
+    }
+    .msg.assistant {
+      background: #f8f9fa; color: #1a1a2e;
+      border: 1px solid #dee2e6;
+      align-self: flex-end;
+      border-bottom-left-radius: 3px;
+    }
+    .chat-input-row {
+      display: flex; gap: 6px;
+    }
+    .chat-input-row textarea {
+      flex: 1; min-height: 50px; max-height: 100px;
+    }
+    .btn-send {
+      padding: 8px 14px;
+      background: #c9a84c; color: #1a1a2e;
+      border: none; border-radius: 8px;
+      font-weight: 700; cursor: pointer;
+      align-self: flex-end;
+    }
+
+    /* Context info */
+    .context-info {
+      background: #e8f4f8;
+      border: 1px solid #bee5eb;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 10px;
+      color: #0c5460;
+      margin-bottom: 8px;
+    }
+
+    /* Templates panel */
+    .template-card {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .template-card:hover { border-color: #c9a84c; background: #fffdf5; }
+    .template-card h4 { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
+    .template-card p { font-size: 10px; color: #6c757d; }
+    .template-card .badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 9px;
+      font-weight: 600;
+      background: #e9ecef;
+      color: #495057;
+      margin-bottom: 4px;
+    }
+
+    .mb-8 { margin-bottom: 8px; }
+    .mt-8 { margin-top: 8px; }
+    .gap-6 { gap: 6px; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-logo">C</div>
+  <div>
+    <div class="header-title">Claude Legal Assistant</div>
+    <div class="header-subtitle">פועל & שות' | עו"ד ישראלי</div>
+  </div>
+</div>
+
+<!-- API Key Section -->
+<div id="api-section">
+  <label>🔑 מפתח API של Anthropic</label>
+  <input type="password" id="api-key-input" placeholder="sk-ant-..."/>
+  <button id="save-key-btn" onclick="saveApiKey()">שמור מפתח</button>
+  <div id="api-status">✓ מפתח נשמר</div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('quick')">⚡ מהיר</div>
+  <div class="tab" onclick="switchTab('draft')">✍️ ניסוח</div>
+  <div class="tab" onclick="switchTab('analyze')">🔍 ניתוח</div>
+  <div class="tab" onclick="switchTab('chat')">💬 שיחה</div>
+  <div class="tab" onclick="switchTab('templates')">📋 תבניות</div>
+</div>
+
+<!-- ===== PANEL: QUICK ===== -->
+<div id="panel-quick" class="panel active">
+  <div class="section-label">פעולות מהירות על הטקסט המסומן</div>
+  <div class="quick-actions">
+    <button class="action-btn" onclick="quickAction('rewrite')">
+      <span class="icon">✏️</span>שכתוב משפטי
+    </button>
+    <button class="action-btn gold" onclick="quickAction('formal')">
+      <span class="icon">⚖️</span>לשון פורמלית
+    </button>
+    <button class="action-btn" onclick="quickAction('summarize')">
+      <span class="icon">📄</span>סיכום
+    </button>
+    <button class="action-btn" onclick="quickAction('claims')">
+      <span class="icon">🎯</span>טענות מרכזיות
+    </button>
+    <button class="action-btn" onclick="quickAction('counterargs')">
+      <span class="icon">🛡️</span>טענות נגד
+    </button>
+    <button class="action-btn gold" onclick="quickAction('extend')">
+      <span class="icon">📝</span>הרחב סעיף
+    </button>
+    <button class="action-btn" onclick="quickAction('simplify')">
+      <span class="icon">💡</span>פשט ללקוח
+    </button>
+    <button class="action-btn" onclick="quickAction('proofread')">
+      <span class="icon">🔎</span>הגהה
+    </button>
+  </div>
+
+  <div id="loading-quick" class="loading">
+    <div class="spinner"></div>
+    <div>Claude עובד...</div>
+  </div>
+  <div id="result-quick" class="result-box"></div>
+  <div id="result-actions-quick" class="result-actions">
+    <button class="btn-insert" onclick="insertResult('quick')">הכנס למסמך</button>
+    <button class="btn-copy" onclick="copyResult('quick')">העתק</button>
+  </div>
+</div>
+
+<!-- ===== PANEL: DRAFT ===== -->
+<div id="panel-draft" class="panel">
+  <div class="section-label mb-8">סוג מסמך</div>
+  <select id="doc-type">
+    <option value="demand_letter">מכתב התראה</option>
+    <option value="pleading">כתב טענות לבית משפט</option>
+    <option value="arbitration">סיכומים לבוררות</option>
+    <option value="affidavit">תצהיר עדות ראשית</option>
+    <option value="opinion">חוות דעת משפטית</option>
+    <option value="contract_clause">סעיף חוזי</option>
+    <option value="appeal">ערר/ערעור</option>
+    <option value="interrogation">שאלון לצד שכנגד</option>
+  </select>
+
+  <div class="section-label mb-8">עובדות/הוראות</div>
+  <textarea id="draft-instructions" rows="5" placeholder="פרט את העובדות הרלוונטיות, הצדדים, הסעד המבוקש...&#10;&#10;לדוגמה: מרשי – מוכר דירה ברחוב X. הקונה לא שילם את יתרת התמורה בסך 200,000₪ ומסרב לפנות. נדרש מכתב התראה לפני פנייה לבית משפט."></textarea>
+
+  <div class="section-label mt-8 mb-8">טון</div>
+  <select id="draft-tone">
+    <option value="formal">פורמלי ומשפטי</option>
+    <option value="firm">נחרץ ותקיף</option>
+    <option value="balanced">מאוזן ועניני</option>
+    <option value="conciliatory">פיוסי</option>
+  </select>
+
+  <button class="btn-primary gold-btn" onclick="draftDocument()">⚡ נסח מסמך</button>
+
+  <div id="loading-draft" class="loading">
+    <div class="spinner"></div>
+    <div>מנסח מסמך...</div>
+  </div>
+  <div id="result-draft" class="result-box"></div>
+  <div id="result-actions-draft" class="result-actions">
+    <button class="btn-insert" onclick="insertResult('draft')">הכנס למסמך</button>
+    <button class="btn-copy" onclick="copyResult('draft')">העתק</button>
+  </div>
+</div>
+
+<!-- ===== PANEL: ANALYZE ===== -->
+<div id="panel-analyze" class="panel">
+  <div class="context-info">💡 סמן טקסט במסמך לניתוח, או הדבק תוכן בתיבה</div>
+
+  <div class="section-label mb-8">סוג ניתוח</div>
+  <select id="analyze-type">
+    <option value="legal_risk">סיכונים משפטיים</option>
+    <option value="contract_review">סקירת חוזה</option>
+    <option value="missing_clauses">סעיפים חסרים</option>
+    <option value="precedents">פסיקה רלוונטית</option>
+    <option value="cross_examine">שאלות חקירה נגדית</option>
+    <option value="expert_challenge">ערעור על חוות דעת מומחה</option>
+    <option value="timeline">ציר זמן אירועים</option>
+    <option value="party_analysis">ניתוח עמדות הצדדים</option>
+  </select>
+
+  <textarea id="analyze-text" rows="6" placeholder="הדבק כאן את הטקסט לניתוח, או השאר ריק לניתוח הטקסט המסומן במסמך..."></textarea>
+
+  <div class="section-label mt-8 mb-8">הקשר נוסף (אופציונלי)</div>
+  <textarea id="analyze-context" rows="2" placeholder="הוסף הקשר: שמות הצדדים, תיק מס', מהות הסכסוך..."></textarea>
+
+  <button class="btn-primary" onclick="analyzeText()">🔍 נתח</button>
+
+  <div id="loading-analyze" class="loading">
+    <div class="spinner"></div>
+    <div>מנתח...</div>
+  </div>
+  <div id="result-analyze" class="result-box"></div>
+  <div id="result-actions-analyze" class="result-actions">
+    <button class="btn-insert" onclick="insertResult('analyze')">הכנס למסמך</button>
+    <button class="btn-copy" onclick="copyResult('analyze')">העתק</button>
+  </div>
+</div>
+
+<!-- ===== PANEL: CHAT ===== -->
+<div id="panel-chat" class="panel">
+  <div class="context-info" id="chat-context-info">
+    💡 Claude מודע להקשר המסמך הנוכחי
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="msg assistant">שלום! אני Claude, העוזר המשפטי שלך. כיצד אוכל לעזור היום?</div>
+  </div>
+  <div class="chat-input-row">
+    <textarea id="chat-input" placeholder="שאל שאלה משפטית, בקש עזרה בניסוח, ניתוח פסיקה..." rows="2"></textarea>
+    <button class="btn-send" onclick="sendChat()">שלח</button>
+  </div>
+  <button class="btn-primary" style="margin-top:6px; padding:6px;" onclick="clearChat()">נקה שיחה</button>
+</div>
+
+<!-- ===== PANEL: TEMPLATES ===== -->
+<div id="panel-templates" class="panel">
+  <div class="section-label mb-8">תבניות מהירות – לחץ להפעלה</div>
+
+  <div class="template-card" onclick="useTemplate('nehari_fraud')">
+    <span class="badge">מקרקעין</span>
+    <h4>🏠 תביעת מרמה עסקה</h4>
+    <p>ניתוח עובדות, טענות מרכזיות, וסעדים נדרשים לתיק הונאת מקרקעין</p>
+  </div>
+
+  <div class="template-card" onclick="useTemplate('minority_shareholder')">
+    <span class="badge">דיני חברות</span>
+    <h4>⚖️ קיפוח בעל מניות מיעוט</h4>
+    <p>ניתוח מבנה החברה, פעולות הרוב, וטענות קיפוח לפי חוק החברות</p>
+  </div>
+
+  <div class="template-card" onclick="useTemplate('building_permit')">
+    <span class="badge">מינהל מקרקעין</span>
+    <h4>🏗️ סכסוך היתרי בנייה</h4>
+    <p>ניתוח דרישות מנהל מקרקעין ישראל, היטלי השבחה, תנאי היתר</p>
+  </div>
+
+  <div class="template-card" onclick="useTemplate('arbitration_summary')">
+    <span class="badge">בוררות</span>
+    <h4>📜 סיכומים לבוררות</h4>
+    <p>מבנה סיכומים: עובדות, ראיות, טענות משפטיות, סעד מבוקש</p>
+  </div>
+
+  <div class="template-card" onclick="useTemplate('expert_cross')">
+    <span class="badge">חקירה נגדית</span>
+    <h4>🎯 חקירת מומחה</h4>
+    <p>שאלות לחקירה נגדית של מומחה: גרפולוג, שמאי, הנדסי</p>
+  </div>
+
+  <div class="template-card" onclick="useTemplate('tma38')">
+    <span class="badge">התחדשות עירונית</span>
+    <h4>🏙️ הסכם תמ"א 38</h4>
+    <p>בדיקת הסכם יזם-דיירים: התחייבויות, בטוחות, לוחות זמנים</p>
+  </div>
+</div>
+
+<script>
+// ==========================================
+// STATE
+// ==========================================
+let apiKey = '';
+let chatHistory = [];
+let lastResults = {};
+let docContext = '';
+
+// ==========================================
+// INIT
+// ==========================================
+Office.onReady(() => {
+  // Load saved API key
+  const saved = localStorage.getItem('claude_legal_api_key');
+  if (saved) {
+    apiKey = saved;
+    document.getElementById('api-key-input').value = saved;
+    document.getElementById('api-status').style.display = 'block';
+  }
+});
+
+// ==========================================
+// API KEY
+// ==========================================
+function saveApiKey() {
+  apiKey = document.getElementById('api-key-input').value.trim();
+  if (apiKey) {
+    localStorage.setItem('claude_legal_api_key', apiKey);
+    document.getElementById('api-status').style.display = 'block';
+  }
+}
+
+// ==========================================
+// TABS
+// ==========================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ==========================================
+// GET SELECTED TEXT FROM WORD
+// ==========================================
+async function getSelectedText() {
+  return new Promise((resolve) => {
+    Word.run(async (context) => {
+      const selection = context.document.getSelection();
+      selection.load('text');
+      await context.sync();
+      resolve(selection.text.trim());
+    }).catch(() => resolve(''));
+  });
+}
+
+// ==========================================
+// GET DOC SUMMARY FOR CONTEXT
+// ==========================================
+async function getDocContext() {
+  return new Promise((resolve) => {
+    Word.run(async (context) => {
+      const body = context.document.body;
+      body.load('text');
+      await context.sync();
+      const text = body.text.slice(0, 2000);
+      resolve(text);
+    }).catch(() => resolve(''));
+  });
+}
+
+// ==========================================
+// CLAUDE API CALL
+// ==========================================
+async function callClaude(systemPrompt, userMessage, useHistory = false) {
+  if (!apiKey) {
+    alert('נא להזין מפתח API תחילה');
+    return null;
+  }
+
+  const messages = useHistory
+    ? [...chatHistory, { role: 'user', content: userMessage }]
+    : [{ role: 'user', content: userMessage }];
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-calls': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-opus-4-20250514',
+      max_tokens: 2000,
+      system: systemPrompt,
+      messages: messages
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error?.message || 'שגיאת API');
+  }
+
+  const data = await response.json();
+  return data.content[0].text;
+}
+
+// ==========================================
+// SHOW / HIDE
+// ==========================================
+function showLoading(panel) {
+  document.getElementById('loading-' + panel).style.display = 'block';
+  document.getElementById('result-' + panel).classList.remove('visible');
+  document.getElementById('result-actions-' + panel).classList.remove('visible');
+}
+function showResult(panel, text) {
+  document.getElementById('loading-' + panel).style.display = 'none';
+  const box = document.getElementById('result-' + panel);
+  box.textContent = text;
+  box.classList.add('visible');
+  document.getElementById('result-actions-' + panel).classList.add('visible');
+  lastResults[panel] = text;
+}
+function showError(panel, msg) {
+  document.getElementById('loading-' + panel).style.display = 'none';
+  const box = document.getElementById('result-' + panel);
+  box.textContent = '❌ שגיאה: ' + msg;
+  box.classList.add('visible');
+}
+
+// ==========================================
+// INSERT RESULT INTO WORD
+// ==========================================
+async function insertResult(panel) {
+  const text = lastResults[panel];
+  if (!text) return;
+  Word.run(async (context) => {
+    const selection = context.document.getSelection();
+    selection.insertText('\n\n' + text + '\n\n', 'After');
+    await context.sync();
+  });
+}
+
+function copyResult(panel) {
+  navigator.clipboard.writeText(lastResults[panel] || '');
+}
+
+// ==========================================
+// QUICK ACTIONS
+// ==========================================
+const quickPrompts = {
+  rewrite: 'שכתב את הטקסט הבא בלשון משפטית תקנית ומדויקת בעברית, תוך שמירה על המשמעות המשפטית המלאה:',
+  formal: 'העבר את הטקסט הבא ללשון רשמית ופורמלית המתאימה לכתב בית משפט ישראלי:',
+  summarize: 'סכם את הטקסט הבא בנקודות מרכזיות, תוך הדגשת הטענות המשפטיות העיקריות:',
+  claims: 'זהה ורשום את הטענות המשפטיות המרכזיות הגלומות בטקסט הבא:',
+  counterargs: 'ניתח את הטקסט הבא וגבש טענות נגד משפטיות לכל טענה מרכזית:',
+  extend: 'הרחב את הסעיף הבא עם נימוקים משפטיים נוספים, הפניות לחקיקה ופסיקה רלוונטית:',
+  simplify: 'תרגם את הטקסט המשפטי הבא לשפה פשוטה ומובנת לאדם שאינו עורך דין:',
+  proofread: 'בדוק את הטקסט הבא לאיתור שגיאות ניסוח, לשון ומשפטיות. ציין בדיוק מה לתקן:'
+};
+
+async function quickAction(type) {
+  showLoading('quick');
+  try {
+    const selected = await getSelectedText();
+    if (!selected) {
+      showError('quick', 'לא נבחר טקסט במסמך. סמן טקסט ונסה שוב.');
+      return;
+    }
+    const system = 'אתה עורך דין ישראלי מנוסה המתמחה בדיני מקרקעין, ליטיגציה אזרחית ודיני חברות. כל תשובותיך הן בעברית, מקצועיות ומדויקות.';
+    const result = await callClaude(system, quickPrompts[type] + '\n\n' + selected);
+    showResult('quick', result);
+  } catch(e) {
+    showError('quick', e.message);
+  }
+}
+
+// ==========================================
+// DRAFT DOCUMENT
+// ==========================================
+const docTypePrompts = {
+  demand_letter: 'נסח מכתב התראה משפטי רשמי',
+  pleading: 'נסח כתב טענות לבית המשפט הכולל: כותרת, עובדות, טענות משפטיות, סעד מבוקש',
+  arbitration: 'נסח סיכומים לבוררות הכוללים: עובדות, ראיות, טענות משפטיות, סעד',
+  affidavit: 'נסח תצהיר עדות ראשית בנוסח הנדרש בבתי המשפט בישראל',
+  opinion: 'כתוב חוות דעת משפטית מפורטת הכוללת: שאלה משפטית, ניתוח, מסקנה',
+  contract_clause: 'נסח סעיף חוזי ברור ומוגן המגן על האינטרסים של הלקוח',
+  appeal: 'נסח ערר/ערעור משפטי הכולל: עובדות, טענות, בקשה לסעד',
+  interrogation: 'הכן שאלון מפורט לצד שכנגד הכולל שאלות לגילוי מסמכים ועובדות'
+};
+
+const toneInstructions = {
+  formal: 'השתמש בלשון פורמלית ומשפטית תקנית',
+  firm: 'השתמש בלשון נחרצת, תקיפה ובלתי מתפשרת',
+  balanced: 'השתמש בלשון מאוזנת ועניינית',
+  conciliatory: 'השתמש בלשון פיוסית ובונה'
+};
+
+async function draftDocument() {
+  showLoading('draft');
+  try {
+    const docType = document.getElementById('doc-type').value;
+    const instructions = document.getElementById('draft-instructions').value;
+    const tone = document.getElementById('draft-tone').value;
+
+    if (!instructions.trim()) {
+      showError('draft', 'נא להזין עובדות/הוראות לניסוח');
+      return;
+    }
+
+    const system = `אתה עורך דין ישראלי בכיר המתמחה בדיני מקרקעין, ליטיגציה אזרחית ודיני חברות. 
+    אתה מנסח מסמכים משפטיים בעברית ברמה הגבוהה ביותר.
+    ${toneInstructions[tone]}.
+    כל המסמכים צריכים להיות ראויים להגשה לבתי המשפט בישראל.`;
+
+    const prompt = `${docTypePrompts[docType]}.\n\nפרטים:\n${instructions}`;
+    const result = await callClaude(system, prompt);
+    showResult('draft', result);
+  } catch(e) {
+    showError('draft', e.message);
+  }
+}
+
+// ==========================================
+// ANALYZE
+// ==========================================
+const analyzePrompts = {
+  legal_risk: 'זהה וניתח את הסיכונים המשפטיים הקיימים בטקסט הבא, ודרג אותם לפי חומרה:',
+  contract_review: 'סקור את החוזה/ההסכם הבא. זהה בעיות, חוסרים, וסעיפים שדורשים שינוי:',
+  missing_clauses: 'זהה אילו סעיפים חסרים בהסכם הבא שהכרחיים להגנה מלאה על הלקוח:',
+  precedents: 'זהה פסיקה ישראלית רלוונטית לסוגיות המשפטיות המופיעות בטקסט הבא:',
+  cross_examine: 'הכן שאלות לחקירה נגדית של העד/מומחה לפי הגרסה הבאה:',
+  expert_challenge: 'זהה חולשות וסתירות בחוות הדעת הבאה שניתן לתקוף בחקירה נגדית:',
+  timeline: 'בנה ציר זמן מסודר של האירועים המופיעים בטקסט הבא:',
+  party_analysis: 'נתח את עמדות הצדדים, האינטרסים שלהם, ונקודות החולשה של כל צד:'
+};
+
+async function analyzeText() {
+  showLoading('analyze');
+  try {
+    let text = document.getElementById('analyze-text').value.trim();
+    const context = document.getElementById('analyze-context').value.trim();
+    const analyzeType = document.getElementById('analyze-type').value;
+
+    if (!text) {
+      text = await getSelectedText();
+    }
+    if (!text) {
+      showError('analyze', 'נא להזין טקסט לניתוח או לסמן טקסט במסמך');
+      return;
+    }
+
+    const system = `אתה עורך דין ישראלי מנוסה המתמחה בדיני מקרקעין, ליטיגציה, ודיני חברות. 
+    תנתח מסמכים משפטיים בצורה מדויקת ומקצועית.
+    ${context ? 'הקשר התיק: ' + context : ''}`;
+
+    const prompt = `${analyzePrompts[analyzeType]}\n\n${text}`;
+    const result = await callClaude(system, prompt);
+    showResult('analyze', result);
+  } catch(e) {
+    showError('analyze', e.message);
+  }
+}
+
+// ==========================================
+// CHAT
+// ==========================================
+async function sendChat() {
+  const input = document.getElementById('chat-input').value.trim();
+  if (!input) return;
+
+  // Add user message
+  addChatMsg('user', input);
+  document.getElementById('chat-input').value = '';
+
+  // Add to history
+  chatHistory.push({ role: 'user', content: input });
+
+  // Loading indicator
+  const loadingMsg = addChatMsg('assistant', '...');
+
+  try {
+    const docCtx = await getDocContext();
+    const system = `אתה עורך דין ישראלי מנוסה המשמש כעוזר משפטי לעורך דין ישראלי בפירמת "פורת שות'".
+    אתה מתמחה בדיני מקרקעין, ליטיגציה אזרחית, דיני חברות, התחדשות עירונית (תמ"א 38).
+    ${docCtx ? 'הקשר המסמך הנוכחי:\n' + docCtx.slice(0, 1000) : ''}
+    דבר בעברית, בצורה מקצועית אך נגישה. תן תשובות ממוקדות ומעשיות.`;
+
+    const result = await callClaude(system, input, true);
+    chatHistory.push({ role: 'assistant', content: result });
+    loadingMsg.textContent = result;
+  } catch(e) {
+    loadingMsg.textContent = '❌ שגיאה: ' + e.message;
+  }
+}
+
+function addChatMsg(role, text) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function clearChat() {
+  chatHistory = [];
+  document.getElementById('chat-messages').innerHTML =
+    '<div class="msg assistant">שיחה חדשה. כיצד אוכל לעזור?</div>';
+}
+
+// Chat on Enter
+document.addEventListener('keydown', function(e) {
+  if (e.target.id === 'chat-input' && e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChat();
+  }
+});
+
+// ==========================================
+// TEMPLATES
+// ==========================================
+const templates = {
+  nehari_fraud: {
+    tab: 'analyze',
+    type: 'legal_risk',
+    placeholder: 'הדבק את עובדות תיק נהרי או עובדות כלליות של הונאת מקרקעין...',
+    context: 'תיק הונאת מקרקעין – ניתוח סיכונים ואסטרטגיה'
+  },
+  minority_shareholder: {
+    tab: 'analyze',
+    type: 'party_analysis',
+    placeholder: 'פרט את מבנה החברה, פעולות הרוב, ונזקים לבעל מניות המיעוט...',
+    context: 'קיפוח בעל מניות מיעוט – ניתוח לפי סעיפים 191-193 לחוק החברות'
+  },
+  building_permit: {
+    tab: 'analyze',
+    type: 'legal_risk',
+    placeholder: 'פרט את פרטי ההיתר, דרישות מנהל מקרקעין, ומחלוקות...',
+    context: 'סכסוך היתרי בנייה ומנהל מקרקעין ישראל'
+  },
+  arbitration_summary: {
+    tab: 'draft',
+    docType: 'arbitration',
+    placeholder: 'פרט: צדדים, מהות הסכסוך, עובדות מרכזיות, ראיות, סעד מבוקש...'
+  },
+  expert_cross: {
+    tab: 'analyze',
+    type: 'expert_challenge',
+    placeholder: 'הדבק את חוות הדעת של המומחה (גרפולוג, שמאי, הנדסי) שיש לתקוף...',
+    context: 'הכנת שאלות חקירה נגדית למומחה'
+  },
+  tma38: {
+    tab: 'analyze',
+    type: 'missing_clauses',
+    placeholder: 'הדבק את הסכם תמ"א 38 לבדיקה...',
+    context: 'בדיקת הסכם תמ"א 38 – הגנת דיירים'
+  }
+};
+
+function useTemplate(id) {
+  const tmpl = templates[id];
+
+  // Switch to correct tab
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const tabs = ['quick', 'draft', 'analyze', 'chat', 'templates'];
+    if (tabs[i] === tmpl.tab) t.click();
+  });
+
+  if (tmpl.tab === 'analyze') {
+    document.getElementById('analyze-type').value = tmpl.type;
+    document.getElementById('analyze-text').placeholder = tmpl.placeholder;
+    document.getElementById('analyze-context').value = tmpl.context || '';
+  } else if (tmpl.tab === 'draft') {
+    document.getElementById('doc-type').value = tmpl.docType;
+    document.getElementById('draft-instructions').placeholder = tmpl.placeholder;
+  }
+}
+</script>
+</body>
+</html>
